@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendrier Coupe du Monde 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0a1628;
+    color: #fff;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #c8102e, #1a1a2e);
+    padding: 28px 24px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '⚽';
+    position: absolute;
+    font-size: 120px;
+    opacity: 0.06;
+    top: -20px; right: -20px;
+  }
+  header h1 { font-size: 2rem; font-weight: 800; letter-spacing: 1px; }
+  header p { color: #ffcc00; font-size: 0.95rem; margin-top: 6px; font-weight: 600; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 14px 20px;
+    background: #111b30;
+    border-bottom: 1px solid #1e2d48;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.82rem;
+    color: #9eb4d4;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .dot-m6 { background: #e8a800; }
+  .dot-bein { background: #00a651; }
+  .dot-both { background: linear-gradient(135deg, #e8a800 50%, #00a651 50%); }
+  .dot-fr { background: #c8102e; }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 14px 20px;
+    background: #0d1e38;
+  }
+  .filter-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid #2a3f60;
+    background: transparent;
+    color: #9eb4d4;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: all .2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: #c8102e;
+    border-color: #c8102e;
+    color: #fff;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  .phase-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffcc00;
+    margin: 28px 0 10px;
+    padding-left: 12px;
+    border-left: 3px solid #ffcc00;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .day-group { margin-bottom: 6px; }
+  .day-header {
+    font-size: 0.78rem;
+    color: #5a7aa0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 12px 4px;
+  }
+
+  .match-card {
+    background: #111b30;
+    border: 1px solid #1e2d48;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color .2s;
+    position: relative;
+  }
+  .match-card:hover { border-color: #2a4a7f; }
+  .match-card.france-match { border-left: 3px solid #c8102e; background: #16203a; }
+  .match-card.hidden { display: none; }
+
+  .match-time {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffcc00;
+    min-width: 48px;
+    text-align: center;
+  }
+  .match-time.night { color: #ff6b6b; }
+
+  .match-teams {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .team { flex: 1; text-align: right; }
+  .team.right { text-align: left; }
+  .vs {
+    color: #5a7aa0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    background: #0d1e38;
+    border-radius: 4px;
+  }
+
+  .match-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 90px;
+  }
+  .group-badge {
+    font-size: 0.7rem;
+    color: #5a7aa0;
+    text-transform: uppercase;
+  }
+  .tv-badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .tv-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .tv-m6 { background: #e8a800; color: #000; }
+  .tv-bein { background: #00a651; color: #fff; }
+  .france-star {
+    position: absolute;
+    top: 8px; left: 8px;
+    font-size: 0.65rem;
+    color: #c8102e;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    background: #111b30;
+    border-top: 1px solid #1e2d48;
+    padding: 14px;
+    font-size: 0.82rem;
+    color: #9eb4d4;
+  }
+  .stat strong { color: #fff; }
+
+  @media (max-width: 600px) {
+    .match-card { flex-wrap: wrap; }
+    .match-meta { min-width: auto; }
+    header h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏆 COUPE DU MONDE 2026</h1>
+  <p>États-Unis · Canada · Mexique &nbsp;|&nbsp; 11 juin – 19 juillet 2026</p>
+</header>
+
+<div class="stats-bar">
+  <div class="stat"><strong>104</strong> matchs</div>
+  <div class="stat"><strong>48</strong> équipes</div>
+  <div class="stat"><strong>12</strong> groupes</div>
+  <div class="stat"><strong>16</strong> villes</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot dot-m6"></div> M6 (gratuit)</div>
+  <div class="legend-item"><div class="dot dot-bein"></div> beIN Sports uniquement</div>
+  <div class="legend-item"><div class="dot dot-both"></div> M6 + beIN Sports</div>
+  <div class="legend-item"><div class="dot dot-fr"></div> Match de la France</div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="filter('all')">Tous</button>
+  <button class="filter-btn" onclick="filter('france')">🇫🇷 France</button>
+  <button class="filter-btn" onclick="filter('m6')">M6 gratuit</button>
+  <button class="filter-btn" onclick="filter('phases')">Phases finales</button>
+  <button class="filter-btn" onclick="filter('groupes')">Phase de groupes</button>
+</div>
+
+<div class="container" id="calendar">
+
+<!-- ========== PHASE DE GROUPES ========== -->
+<div class="phase-title">Phase de Groupes</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Jeudi 11 juin 2026</div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇲🇽 Mexique</span><span class="vs">VS</span><span class="team right">Afrique du Sud 🇿🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe A · Mexico</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Vendredi 12 juin 2026</div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">04h00</div>
+    <div class="match-teams"><span class="team">🇰🇷 Corée du Sud</span><span class="vs">VS</span><span class="team right">Rép. tchèque 🇨🇿</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe A</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇨🇦 Canada</span><span class="vs">VS</span><span class="team right">Bosnie-Herzégovine 🇧🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe B · Toronto</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Samedi 13 juin 2026</div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">03h00</div>
+    <div class="match-teams"><span class="team">🇺🇸 États-Unis</span><span class="vs">VS</span><span class="team right">Paraguay 🇵🇾</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe D</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇶🇦 Qatar</span><span class="vs">VS</span><span class="team right">Suisse 🇨🇭</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe B · San Francisco</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Dimanche 14 juin 2026</div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time night">00h00</div>
+    <div class="match-teams"><span class="team">🇧🇷 Brésil</span><span class="vs">VS</span><span class="team right">Maroc 🇲🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe C · New York</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">03h00</div>
+    <div class="match-teams"><span class="team">🇭🇹 Haïti</span><span class="vs">VS</span><span class="team right">Écosse 🏴󠁧󠁢󠁳󠁣󠁴󠁿</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe C</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">06h00</div>
+    <div class="match-teams"><span class="team">🇦🇺 Australie</span><span class="vs">VS</span><span class="team right">Turquie 🇹🇷</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe D</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">19h00</div>
+    <div class="match-teams"><span class="team">🇩🇪 Allemagne</span><span class="vs">VS</span><span class="team right">Curaçao 🇨🇼</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe E · Houston</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">22h00</div>
+    <div class="match-teams"><span class="team">🇳🇱 Pays-Bas</span><span class="vs">VS</span><span class="team right">Japon 🇯🇵</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe F · Dallas</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Lundi 15 juin 2026</div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">01h00</div>
+    <div class="match-teams"><span class="team">🇨🇮 Côte d'Ivoire</span><span class="vs">VS</span><span class="team right">Équateur 🇪🇨</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe E</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">04h00</div>
+    <div class="match-teams"><span class="team">🇸🇪 Suède</span><span class="vs">VS</span><span class="team right">Tunisie 🇹🇳</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe F</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">18h00</div>
+    <div class="match-teams"><span class="team">🇪🇸 Espagne</span><span class="vs">VS</span><span class="team right">Cap-Vert 🇨🇻</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe H · Atlanta</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇧🇪 Belgique</span><span class="vs">VS</span><span class="team right">Égypte 🇪🇬</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe G · Seattle</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Mardi 16 juin 2026</div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time night">00h00</div>
+    <div class="match-teams"><span class="team">🇸🇦 Arabie Saoudite</span><span class="vs">VS</span><span class="team right">Uruguay 🇺🇾</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe H · Miami</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card france-match" data-tags="m6 groupes france">
+    <div class="france-star">🇫🇷 Les Bleus</div>
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇫🇷 France</span><span class="vs">VS</span><span class="team right">Sénégal 🇸🇳</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe I · New York</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Mercredi 17 juin 2026</div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time night">00h00</div>
+    <div class="match-teams"><span class="team">🇮🇶 Irak</span><span class="vs">VS</span><span class="team right">Norvège 🇳🇴</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe I · Boston</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">03h00</div>
+    <div class="match-teams"><span class="team">🇦🇷 Argentine</span><span class="vs">VS</span><span class="team right">Algérie 🇩🇿</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe J</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">19h00</div>
+    <div class="match-teams"><span class="team">🇵🇹 Portugal</span><span class="vs">VS</span><span class="team right">RD Congo 🇨🇩</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe K · Houston</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">22h00</div>
+    <div class="match-teams"><span class="team">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre</span><span class="vs">VS</span><span class="team right">Croatie 🇭🇷</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe L · Dallas</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Jeudi 18 juin 2026</div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">18h00</div>
+    <div class="match-teams"><span class="team">🇨🇿 Rép. tchèque</span><span class="vs">VS</span><span class="team right">Afrique du Sud 🇿🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe A · Atlanta</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇨🇭 Suisse</span><span class="vs">VS</span><span class="team right">Bosnie-Herzégovine 🇧🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe B · Los Angeles</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Vendredi 19 juin 2026</div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇺🇸 États-Unis</span><span class="vs">VS</span><span class="team right">Australie 🇦🇺</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe D · Seattle</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Samedi 20 juin 2026</div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time night">00h00</div>
+    <div class="match-teams"><span class="team">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse</span><span class="vs">VS</span><span class="team right">Maroc 🇲🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe C · Boston</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">19h00</div>
+    <div class="match-teams"><span class="team">🇳🇱 Pays-Bas</span><span class="vs">VS</span><span class="team right">Suède 🇸🇪</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe F · Houston</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">22h00</div>
+    <div class="match-teams"><span class="team">🇩🇪 Allemagne</span><span class="vs">VS</span><span class="team right">Côte d'Ivoire 🇨🇮</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe E · Dallas</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Dimanche 21 juin 2026</div>
+  <div class="match-card" data-tags="bein groupes">
+    <div class="match-time night">01h00</div>
+    <div class="match-teams"><span class="team">🇯🇵 Japon</span><span class="vs">VS</span><span class="team right">Tunisie 🇹🇳</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe F</span><div class="tv-badges"><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">18h00</div>
+    <div class="match-teams"><span class="team">🇪🇸 Espagne</span><span class="vs">VS</span><span class="team right">Arabie Saoudite 🇸🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe H · Atlanta</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇧🇪 Belgique</span><span class="vs">VS</span><span class="team right">Iran 🇮🇷</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe G · Seattle</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Lundi 22 juin 2026</div>
+  <div class="match-card france-match" data-tags="m6 groupes france">
+    <div class="france-star">🇫🇷 Les Bleus</div>
+    <div class="match-time">23h00</div>
+    <div class="match-teams"><span class="team">🇫🇷 France</span><span class="vs">VS</span><span class="team right">Irak 🇮🇶</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe I · Philadelphie</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time night">00h00</div>
+    <div class="match-teams"><span class="team">🇵🇹 Portugal</span><span class="vs">VS</span><span class="team right">Ouzbékistan 🇺🇿</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe K</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="match-card" data-tags="m6 groupes">
+    <div class="match-time">22h00</div>
+    <div class="match-teams"><span class="team">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre</span><span class="vs">VS</span><span class="team right">Panama 🇵🇦</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe L · New York</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<div class="day-group" data-phase="groupes">
+  <div class="day-header">Jeudi 26 juin 2026</div>
+  <div class="match-card france-match" data-tags="m6 groupes france">
+    <div class="france-star">🇫🇷 Les Bleus</div>
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">🇫🇷 France</span><span class="vs">VS</span><span class="team right">Norvège 🇳🇴</span></div>
+    <div class="match-meta"><span class="group-badge">Groupe I · Boston</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<!-- ========== 16es DE FINALE ========== -->
+<div class="phase-title">Seizièmes de Finale</div>
+<div class="day-group" data-phase="phases">
+  <div class="day-header">28 juin – 4 juillet 2026</div>
+  <div class="match-card" data-tags="m6 phases">
+    <div class="match-time">–</div>
+    <div class="match-teams"><span class="team">32 matchs</span><span class="vs">à</span><span class="team right">élimination directe</span></div>
+    <div class="match-meta"><span class="group-badge">16es de finale</span><div class="tv-badges"><span class="tv-badge tv-m6">M6*</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <p style="font-size:0.75rem;color:#5a7aa0;padding:6px 14px 8px;">* M6 diffuse 9 seizièmes de finale dont ceux de la France (sélection annoncée après le tableau)</p>
+</div>
+
+<!-- ========== 8es DE FINALE ========== -->
+<div class="phase-title">Huitièmes de Finale</div>
+<div class="day-group" data-phase="phases">
+  <div class="day-header">4 – 8 juillet 2026</div>
+  <div class="match-card" data-tags="m6 phases">
+    <div class="match-time">–</div>
+    <div class="match-teams"><span class="team">16 matchs</span><span class="vs">à</span><span class="team right">élimination directe</span></div>
+    <div class="match-meta"><span class="group-badge">8es de finale</span><div class="tv-badges"><span class="tv-badge tv-m6">M6*</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <p style="font-size:0.75rem;color:#5a7aa0;padding:6px 14px 8px;">* M6 diffuse 6 huitièmes de finale (sélection annoncée après le tableau)</p>
+</div>
+
+<!-- ========== QUARTS DE FINALE ========== -->
+<div class="phase-title">Quarts de Finale</div>
+<div class="day-group" data-phase="phases">
+  <div class="day-header">9 – 12 juillet 2026</div>
+  <div class="match-card" data-tags="m6 phases">
+    <div class="match-time">21h / 22h / 23h / 3h</div>
+    <div class="match-teams"><span class="team">8 matchs</span><span class="vs">à</span><span class="team right">élimination directe</span></div>
+    <div class="match-meta"><span class="group-badge">Quarts de finale</span><div class="tv-badges"><span class="tv-badge tv-m6">M6*</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <p style="font-size:0.75rem;color:#5a7aa0;padding:6px 14px 8px;">* M6 diffuse 3 quarts de finale dont celui de la France</p>
+</div>
+
+<!-- ========== DEMI-FINALES ========== -->
+<div class="phase-title">Demi-Finales</div>
+<div class="day-group" data-phase="phases">
+  <div class="day-header">Lundi 14 juillet 2026</div>
+  <div class="match-card" data-tags="m6 phases">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">Vainqueur QF 1</span><span class="vs">VS</span><span class="team right">Vainqueur QF 2</span></div>
+    <div class="match-meta"><span class="group-badge">Demi-finale 1</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="day-header" style="padding-top:14px;">Mardi 15 juillet 2026</div>
+  <div class="match-card" data-tags="m6 phases">
+    <div class="match-time">21h00</div>
+    <div class="match-teams"><span class="team">Vainqueur QF 3</span><span class="vs">VS</span><span class="team right">Vainqueur QF 4</span></div>
+    <div class="match-meta"><span class="group-badge">Demi-finale 2</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+<!-- ========== PETITE FINALE & FINALE ========== -->
+<div class="phase-title">Petite Finale & Finale</div>
+<div class="day-group" data-phase="phases">
+  <div class="day-header">Vendredi 18 juillet 2026</div>
+  <div class="match-card" data-tags="m6 phases">
+    <div class="match-time">23h00</div>
+    <div class="match-teams"><span class="team">Perdant DF 1</span><span class="vs">VS</span><span class="team right">Perdant DF 2</span></div>
+    <div class="match-meta"><span class="group-badge">3e place</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+  <div class="day-header" style="padding-top:14px;">Dimanche 19 juillet 2026 🏆</div>
+  <div class="match-card" data-tags="m6 phases" style="border: 2px solid #ffcc00; background: #1a1e0a;">
+    <div class="match-time" style="color:#ffcc00; font-size:1.3rem;">21h00</div>
+    <div class="match-teams" style="font-size:1.05rem;"><span class="team">Vainqueur DF 1</span><span class="vs" style="background:#1a1e0a; color:#ffcc00;">VS</span><span class="team right">Vainqueur DF 2</span></div>
+    <div class="match-meta"><span class="group-badge" style="color:#ffcc00;">🏆 FINALE · New York</span><div class="tv-badges"><span class="tv-badge tv-m6">M6</span><span class="tv-badge tv-bein">beIN</span></div></div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="stats-bar" style="border-top:1px solid #1e2d48; margin-top:0;">
+  <div class="stat">📡 <strong>beIN Sports</strong> : 104 matchs (abonnement)</div>
+  <div class="stat">📺 <strong>M6</strong> : 54 matchs (gratuit TNT + M6+)</div>
+  <div class="stat">⚠️ <strong>TF1</strong> n'a aucun match cette édition</div>
+</div>
+
+<script>
+function filter(type) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const cards = document.querySelectorAll('.match-card');
+  const days = document.querySelectorAll('.day-group');
+
+  cards.forEach(c => {
+    const tags = c.dataset.tags || '';
+    if (type === 'all') c.classList.remove('hidden');
+    else if (type === 'france') c.classList.toggle('hidden', !tags.includes('france'));
+    else if (type === 'm6') c.classList.toggle('hidden', !tags.includes('m6'));
+    else if (type === 'phases') c.classList.toggle('hidden', !tags.includes('phases'));
+    else if (type === 'groupes') c.classList.toggle('hidden', !tags.includes('groupes'));
+  });
+
+  // Hide empty day groups
+  days.forEach(d => {
+    const visible = [...d.querySelectorAll('.match-card')].some(c => !c.classList.contains('hidden'));
+    d.style.display = visible ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
