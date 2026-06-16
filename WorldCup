@@ -162,6 +162,8 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
   <button onclick="fetchScores()" style="margin-left:10px;padding:2px 10px;border-radius:10px;border:1px solid #2a4a7f;background:transparent;color:#6a8ab0;cursor:pointer;font-size:0.75rem;">↻ Rafraîchir</button>
 </div>
 
+<div class="note" id="api-message" role="status" aria-live="polite"></div>
+
 <div class="status-bar">
   <div><strong id="stat-played">—</strong> matchs joués</div>
   <div><strong id="stat-total">104</strong> matchs au total</div>
@@ -430,6 +432,18 @@ function renderGoals(goals, side) {
 let currentFilter = 'all';
 let allMatches = [];
 
+const SCORE_CACHE_KEY = 'worldcup-2026-openfootball-cache-v1';
+const SCORE_SOURCES = [
+  {
+    name: 'GitHub Raw',
+    url: 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json'
+  },
+  {
+    name: 'jsDelivr mirror',
+    url: 'https://cdn.jsdelivr.net/gh/openfootball/worldcup.json@master/2026/worldcup.json'
+  }
+];
+
 function setFilter(f, btn) {
   currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -583,16 +597,127 @@ function renderCalendar(matches) {
   applyFilter();
 }
 
-async function fetchScores() {
+function setApiMessage(message, isError = false) {
+  const el = document.getElementById('api-message');
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.color = isError ? '#e87070' : '#3a5a80';
+}
+
+function validateWorldCupData(data, sourceName) {
+  if (!data || !Array.isArray(data.matches)) {
+    throw new Error(`${sourceName}: structure JSON inattendue (matches absent)`);
+  }
+  const validMatches = data.matches.filter(m =>
+    m && typeof m === 'object' && m.date && m.team1 && m.team2
+  );
+  if (validMatches.length === 0) {
+    throw new Error(`${sourceName}: aucun match exploitable dans le JSON`);
+  }
+  return validMatches;
+}
+
+async function fetchJsonWithTimeout(source, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const sep = source.url.includes('?') ? '&' : '?';
+  const url = `${source.url}${sep}_=${Date.now()}`;
+
   try {
-    const r = await fetch('https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json?_=' + Date.now());
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    renderCalendar(data.matches);
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-store',
+      credentials: 'omit',
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json,text/plain;q=0.9,*/*;q=0.8' }
+    });
+
+    if (!response.ok) {
+      throw new Error(`${source.name}: HTTP ${response.status}`);
+    }
+
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      throw new Error(`${source.name}: reponse non JSON`);
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`${source.name}: delai depasse`);
+    }
+    if (error instanceof TypeError) {
+      throw new Error(`${source.name}: acces reseau refuse ou bloque (${error.message})`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function readCachedMatches() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(SCORE_CACHE_KEY) || 'null');
+    if (cached && Array.isArray(cached.matches)) return cached;
+  } catch (error) {
+    localStorage.removeItem(SCORE_CACHE_KEY);
+  }
+  return null;
+}
+
+function writeCachedMatches(matches, sourceName) {
+  try {
+    localStorage.setItem(SCORE_CACHE_KEY, JSON.stringify({
+      matches,
+      sourceName,
+      savedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+    // Cache best effort only.
+  }
+}
+
+async function loadMatchesFromNetwork() {
+  const errors = [];
+  for (const source of SCORE_SOURCES) {
+    try {
+      const data = await fetchJsonWithTimeout(source);
+      const matches = validateWorldCupData(data, source.name);
+      return { matches, sourceName: source.name };
+    } catch (error) {
+      errors.push(error.message);
+    }
+  }
+  throw new Error(errors.join(' | '));
+}
+
+async function fetchScores() {
+  document.getElementById('loading').style.display = '';
+  document.getElementById('last-update').textContent = 'Chargement...';
+  setApiMessage('Recuperation des resultats...');
+
+  try {
+    const { matches, sourceName } = await loadMatchesFromNetwork();
+    renderCalendar(matches);
+    writeCachedMatches(matches, sourceName);
     const now = new Date();
     document.getElementById('last-update').textContent = now.toLocaleTimeString('fr-FR');
+    setApiMessage(`Donnees chargees depuis ${sourceName}.`);
   } catch (e) {
-    document.getElementById('last-update').textContent = 'Erreur : ' + e.message;
+    const cached = readCachedMatches();
+    if (cached) {
+      renderCalendar(cached.matches);
+      const savedAt = cached.savedAt ? new Date(cached.savedAt).toLocaleString('fr-FR') : 'date inconnue';
+      document.getElementById('last-update').textContent = `cache du ${savedAt}`;
+      setApiMessage(`API indisponible. Affichage de la derniere version enregistree. Detail : ${e.message}`, true);
+    } else {
+      document.getElementById('last-update').textContent = 'API indisponible';
+      setApiMessage(`Impossible de charger les resultats. Verifiez l'acces a raw.githubusercontent.com ou utilisez un serveur/proxy local. Detail : ${e.message}`, true);
+      document.getElementById('calendar').innerHTML = '<div class="note">Aucune donnee de match disponible pour le moment.</div>';
+      document.getElementById('stat-played').textContent = '0';
+      document.getElementById('stat-france').textContent = 'indisponible';
+    }
   } finally {
     document.getElementById('loading').style.display = 'none';
   }
