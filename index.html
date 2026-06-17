@@ -6,7 +6,11 @@
 <title>Coupe du Monde 2026 – Calendrier & Résultats</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Arial, sans-serif; background: #08111f; color: #e8edf5; min-height: 100vh; }
+html, body, button, select {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='12' fill='white' stroke='black' stroke-width='2'/%3E%3Cpolygon points='14,7 19,11 17,17 11,17 9,11' fill='black'/%3E%3Cpath d='M14 7V2M19 11l5-2M17 17l3 5M11 17l-3 5M9 11L4 9' stroke='black' stroke-width='2'/%3E%3C/svg%3E") 14 14, auto;
+}
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #08111f; color: #e8edf5; min-height: 100vh; transition: background .2s, color .2s; }
+body.light { background: #f4f7fb; color: #132238; }
 
 /* HEADER */
 header {
@@ -25,6 +29,11 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
   background: #0d1c30; padding: 8px 16px; font-size: 0.78rem; color: #6a8ab0;
   border-bottom: 1px solid #142035;
 }
+.theme-toggle {
+  margin-left: 10px; padding: 3px 10px; border-radius: 10px; border: 1px solid #2a4a7f;
+  background: transparent; color: #7a9cc0; font-size: 0.75rem; font-weight: 700;
+}
+.theme-toggle:hover { color: #fff; border-color: #b5002e; background: #b5002e; }
 .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #2ecc71; animation: pulse 1.5s infinite; flex-shrink: 0; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 #last-update { color: #4a9a6a; font-weight: 600; }
@@ -52,6 +61,10 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
   transition: all .18s;
 }
 .filter-btn:hover, .filter-btn.active { background: #b5002e; border-color: #b5002e; color: #fff; }
+.team-select {
+  min-width: 190px; padding: 5px 12px; border-radius: 20px; border: 1px solid #1e3352;
+  background: #08111f; color: #e8edf5; font-size: 0.8rem;
+}
 
 /* CONTENT */
 .container { max-width: 860px; margin: 0 auto; padding: 18px 14px 50px; }
@@ -61,7 +74,18 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
   border-left: 3px solid #f5c518;
   text-transform: uppercase; letter-spacing: 1.5px;
 }
-.day-header { font-size: 0.72rem; color: #4a6a90; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; padding: 10px 10px 3px; }
+.day-header {
+  width: 100%; border: 0; background: transparent; text-align: left;
+  font-size: 0.72rem; color: #4a6a90; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; padding: 10px 10px 3px;
+}
+.day-header::before { content: 'v'; display: inline-block; width: 18px; color: #f5c518; }
+.day-group.collapsed .day-header::before { content: '>'; }
+.day-group.collapsed .match-card { display: none; }
+.day-group.today .day-header {
+  color: #f5c518; background: rgba(245,197,24,.08); border-left: 3px solid #f5c518;
+}
+.day-group.today .day-header::after { content: '  · Aujourd’hui'; color: #2ecc71; }
 
 /* MATCH CARD */
 .match-card {
@@ -88,9 +112,22 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
 .match-center {
   flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
-.team-block { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 600; }
-.team-block.right { flex-direction: row-reverse; }
+.team-block {
+  display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; font-weight: 600;
+  min-width: 0; flex: 1;
+}
+.team-block.right { align-items: flex-end; text-align: right; }
+.team-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.team-block.right .team-row { flex-direction: row-reverse; }
 .team-name { max-width: 130px; }
+.team-block.winner .team-name {
+  color: #f5c518; text-shadow: 0 0 12px rgba(245,197,24,.22);
+}
+.team-block.winner .team-row::after {
+  content: 'Gagnant'; font-size: 0.56rem; color: #08111f; background: #f5c518;
+  border-radius: 999px; padding: 1px 6px; text-transform: uppercase; letter-spacing: .4px;
+}
+.team-block.right.winner .team-row::after { order: -1; }
 
 .score-block {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -104,7 +141,9 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
 .score-ft.has-score { color: #fff; background: #12284a; border-color: #2a4a7f; }
 .score-vs { font-size: 0.72rem; color: #3a5a80; font-weight: 700; letter-spacing: 1px; }
 .score-ht { font-size: 0.68rem; color: #4a7a60; }
-.score-goals { font-size: 0.65rem; color: #5a8aba; line-height: 1.4; text-align: center; max-width: 180px; margin-top: 2px; }
+.team-goals { font-size: 0.65rem; color: #5a8aba; line-height: 1.35; font-weight: 500; max-width: 190px; }
+.team-block.right .team-goals { text-align: right; }
+.team-goals:empty { display: none; }
 
 .match-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 80px; flex-shrink: 0; }
 .group-badge { font-size: 0.65rem; color: #4a6a90; text-align: right; }
@@ -135,12 +174,29 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-overlay p { color: #6a8ab0; font-size: 0.9rem; }
 
+body.light header { background: linear-gradient(135deg, #b5002e 0%, #fff 72%, #eef3fa 100%); }
+body.light .update-bar,
+body.light .legend,
+body.light .status-bar { background: #ffffff; color: #4a5870; border-color: #d8e0eb; }
+body.light .filters { background: #eef3fa; border-color: #d8e0eb; }
+body.light .filter-btn,
+body.light .theme-toggle { border-color: #c9d5e4; color: #35506f; }
+body.light .team-select { background: #fff; color: #132238; border-color: #c9d5e4; }
+body.light .match-card { background: #ffffff; border-color: #dbe4ef; }
+body.light .match-card:hover { background: #f8fbff; border-color: #b8cae0; }
+body.light .score-ft { background: #eef3fa; color: #132238; border-color: #c9d5e4; }
+body.light .score-ft.has-score { background: #dfeafa; color: #132238; border-color: #b8cae0; }
+body.light .day-group.today .day-header { background: #fff8dc; }
+body.light .status-bar strong { color: #132238; }
+body.light .loading-overlay { background: #f4f7fb; }
+
 @media (max-width: 600px) {
   .match-center { flex-wrap: wrap; }
   .team-name { max-width: 90px; font-size: 0.8rem; }
   .score-ft { font-size: 1rem; }
   .match-meta { min-width: auto; }
   header h1 { font-size: 1.3rem; }
+  .team-select { width: 100%; }
 }
 </style>
 </head>
@@ -160,6 +216,7 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
   <div class="dot-live"></div>
   <span>Résultats mis à jour automatiquement · Dernière actualisation : <span id="last-update">—</span></span>
   <button onclick="fetchScores()" style="margin-left:10px;padding:2px 10px;border-radius:10px;border:1px solid #2a4a7f;background:transparent;color:#6a8ab0;cursor:pointer;font-size:0.75rem;">↻ Rafraîchir</button>
+  <button class="theme-toggle" id="theme-toggle" type="button" onclick="toggleTheme()">Mode clair</button>
 </div>
 
 <div class="note" id="api-message" role="status" aria-live="polite"></div>
@@ -184,6 +241,9 @@ header p { color: #f5c518; font-size: 0.88rem; margin-top: 5px; font-weight: 600
   <button class="filter-btn" onclick="setFilter('m6',this)">📺 M6</button>
   <button class="filter-btn" onclick="setFilter('groupes',this)">Phase de groupes</button>
   <button class="filter-btn" onclick="setFilter('phases',this)">Phases finales</button>
+  <select class="team-select" id="team-filter" onchange="setTeamFilter(this.value)" aria-label="Filtrer par équipe">
+    <option value="">Toutes les équipes</option>
+  </select>
 </div>
 
 <div class="container" id="calendar">
@@ -425,12 +485,14 @@ function renderGoals(goals, side) {
     let icon = '⚽';
     if (g.owngoal) icon = '🙈';
     if (g.penalty) icon = '⬜';
-    return `${icon} ${g.name} ${g.minute}'`;
+    return `${icon} ${escapeHtml(g.name || '')} ${escapeHtml(String(g.minute || ''))}'`;
   }).join(' · ');
 }
 
 let currentFilter = 'all';
+let currentTeamFilter = '';
 let allMatches = [];
+const expandedPastDays = new Set();
 
 const SCORE_CACHE_KEY = 'worldcup-2026-openfootball-cache-v1';
 const SCORE_SOURCES = [
@@ -444,6 +506,90 @@ const SCORE_SOURCES = [
   }
 ];
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getParisDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date).reduce((acc, part) => {
+    acc[part.type] = part.value;
+    return acc;
+  }, {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function isPastDate(dateStr) {
+  return dateStr && dateStr !== 'TBD' && dateStr < getParisDateKey();
+}
+
+function getWinnerSide(match) {
+  if (!match.score || !match.score.ft) return '';
+  const [s1, s2] = match.score.ft.map(Number);
+  if (Number.isNaN(s1) || Number.isNaN(s2) || s1 === s2) return '';
+  return s1 > s2 ? 'team1' : 'team2';
+}
+
+function setTeamFilter(team) {
+  currentTeamFilter = team;
+  applyFilter();
+}
+
+function populateTeamFilter(matches) {
+  const select = document.getElementById('team-filter');
+  if (!select) return;
+  const previous = select.value;
+  const teams = [...new Set(matches.flatMap(m => [m.team1, m.team2]).filter(Boolean))]
+    .sort((a, b) => teamFR(a)[0].localeCompare(teamFR(b)[0], 'fr'));
+
+  select.innerHTML = '<option value="">Toutes les équipes</option>' + teams.map(team => {
+    const [label, flag] = teamFR(team);
+    return `<option value="${escapeHtml(team)}">${escapeHtml(flag)} ${escapeHtml(label)}</option>`;
+  }).join('');
+
+  if (teams.includes(previous)) {
+    select.value = previous;
+    currentTeamFilter = previous;
+  } else {
+    currentTeamFilter = '';
+  }
+}
+
+function toggleDay(date, btn) {
+  const day = btn.closest('.day-group');
+  if (!day) return;
+  const collapsed = day.classList.toggle('collapsed');
+  if (collapsed) expandedPastDays.delete(date);
+  else expandedPastDays.add(date);
+}
+
+function applyTheme(theme) {
+  const isLight = theme === 'light';
+  document.body.classList.toggle('light', isLight);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = isLight ? 'Mode sombre' : 'Mode clair';
+  try { localStorage.setItem('worldcup-theme', isLight ? 'light' : 'dark'); } catch (error) {}
+}
+
+function toggleTheme() {
+  applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+}
+
+function initTheme() {
+  let saved = 'dark';
+  try { saved = localStorage.getItem('worldcup-theme') || 'dark'; } catch (error) {}
+  applyTheme(saved);
+}
+
 function setFilter(f, btn) {
   currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -454,6 +600,8 @@ function setFilter(f, btn) {
 function applyFilter() {
   document.querySelectorAll('.match-card').forEach(card => {
     const tags = card.dataset.tags || '';
+    const team1 = card.dataset.team1 || '';
+    const team2 = card.dataset.team2 || '';
     let show = true;
     if (currentFilter === 'france') show = tags.includes('france');
     else if (currentFilter === 'm6') show = tags.includes('m6');
@@ -461,6 +609,7 @@ function applyFilter() {
     else if (currentFilter === 'ajouer') show = !tags.includes('joue');
     else if (currentFilter === 'groupes') show = tags.includes('groupes');
     else if (currentFilter === 'phases') show = tags.includes('phases');
+    if (currentTeamFilter) show = show && (team1 === currentTeamFilter || team2 === currentTeamFilter);
     card.classList.toggle('hidden', !show);
   });
   // Hide empty phase/day blocks
@@ -477,6 +626,7 @@ function applyFilter() {
 
 function renderCalendar(matches) {
   allMatches = matches;
+  populateTeamFilter(matches);
   const phases = groupMatches(matches);
   const cal = document.getElementById('calendar');
   cal.innerHTML = '';
@@ -505,11 +655,15 @@ function renderCalendar(matches) {
 
     Object.entries(byDate).sort().forEach(([date, dayMatches]) => {
       const dayEl = document.createElement('div');
-      dayEl.className = 'day-group';
+      const isToday = date === getParisDateKey();
+      const shouldCollapse = isPastDate(date) && !expandedPastDays.has(date);
+      dayEl.className = 'day-group' + (isToday ? ' today' : '') + (shouldCollapse ? ' collapsed' : '');
 
-      const dh = document.createElement('div');
+      const dh = document.createElement('button');
+      dh.type = 'button';
       dh.className = 'day-header';
       dh.textContent = date === 'TBD' ? 'Date à définir' : formatDate(date);
+      dh.onclick = () => toggleDay(date, dh);
       dayEl.appendChild(dh);
 
       dayMatches.forEach(m => {
@@ -520,6 +674,7 @@ function renderCalendar(matches) {
         const isNight = isNightTime(parisTime);
         const [name1, flag1] = teamFR(m.team1);
         const [name2, flag2] = teamFR(m.team2);
+        const winnerSide = getWinnerSide(m);
 
         if (hasScore) playedCount++;
         if (isFrance && hasScore) {
@@ -540,18 +695,20 @@ function renderCalendar(matches) {
         const card = document.createElement('div');
         card.className = 'match-card' + (isFrance ? ' france-match' : '');
         card.dataset.tags = tags;
+        card.dataset.team1 = m.team1 || '';
+        card.dataset.team2 = m.team2 || '';
 
         // Goals text
         const goals1 = renderGoals(m.goals1, 'left');
         const goals2 = renderGoals(m.goals2, 'right');
-        const goalsText = (goals1 || goals2) ? `<div class="score-goals">${goals1}${goals1&&goals2?' &nbsp;|&nbsp; ':''}${goals2}</div>` : '';
 
         card.innerHTML = `
           ${isFrance ? '<div class="france-label">🇫🇷 Les Bleus</div>' : ''}
           <div class="match-time ${isNight?'night':''}" style="${isFrance?'margin-top:10px':''}">${parisTime}</div>
           <div class="match-center">
-            <div class="team-block">
-              <span>${flag1}</span><span class="team-name">${name1}</span>
+            <div class="team-block ${winnerSide === 'team1' ? 'winner' : ''}">
+              <div class="team-row"><span>${escapeHtml(flag1)}</span><span class="team-name">${escapeHtml(name1)}</span></div>
+              <div class="team-goals">${goals1}</div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
               <div class="score-block">
@@ -563,10 +720,10 @@ function renderCalendar(matches) {
                   : `<div class="score-vs">VS</div>`
                 }
               </div>
-              ${goalsText}
             </div>
-            <div class="team-block right">
-              <span>${flag2}</span><span class="team-name">${name2}</span>
+            <div class="team-block right ${winnerSide === 'team2' ? 'winner' : ''}">
+              <div class="team-row"><span>${escapeHtml(flag2)}</span><span class="team-name">${escapeHtml(name2)}</span></div>
+              <div class="team-goals">${goals2}</div>
             </div>
           </div>
           <div class="match-meta">
@@ -723,11 +880,13 @@ async function fetchScores() {
   }
 }
 
+initTheme();
+
 // Load on start
 fetchScores();
 
 // Auto-refresh every 5 minutes
-setInterval(fetchScores, 36000000);
+setInterval(fetchScores, 5 * 60 * 1000);
 </script>
 </body>
 </html>
